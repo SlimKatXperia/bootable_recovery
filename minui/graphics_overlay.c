@@ -51,7 +51,6 @@
 
 #include "minui.h"
 
-#define MDP_V3_0_4 304
 #define MDP_V4_0 400
 
 #ifdef MSM_BSP
@@ -78,7 +77,6 @@ static int map_mdp_pixel_format()
 #endif
     return format;
 }
-#endif // #ifdef MSM_BSP
 
 static bool overlay_supported = false;
 
@@ -93,22 +91,16 @@ bool target_has_overlay(char *version)
             memcpy(str_ver, version + strlen("msmfb"), 3);
             str_ver[3] = '\0';
             mdp_version = atoi(str_ver);
-
-            // Normalize MDP version to ease comparison.
-            // This is needed only because
-            // MDP 3.0.3 reports value as 303 which
-            // is more than all the others
-
-            if (mdp_version >= MDP_V4_0 || mdp_version == MDP_V3_0_4) {
+            if (mdp_version >= MDP_V4_0) {
                 overlay_supported = true;
             }
+        } else if (!strncmp(version, "mdssfb", strlen("mdssfb"))) {
+            overlay_supported = true;
         }
     }
 
     return overlay_supported;
 }
-
-#ifdef MSM_BSP
 
 int free_ion_mem(void) {
     if (!overlay_supported)
@@ -288,6 +280,10 @@ int overlay_display_frame(int fd, GGLubyte* data, size_t size)
 }
 
 #else
+
+bool target_has_overlay(char *version) {
+    return false;
+}
 
 int free_ion_mem(void) {
     return -EINVAL;
